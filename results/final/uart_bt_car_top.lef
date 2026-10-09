@@ -1,0 +1,138 @@
+VERSION 5.7 ;
+  NOWIREEXTENSIONATPIN ON ;
+  DIVIDERCHAR "/" ;
+  BUSBITCHARS "[]" ;
+MACRO uart_bt_car_top
+  CLASS BLOCK ;
+  FOREIGN uart_bt_car_top ;
+  ORIGIN 0.000 0.000 ;
+  SIZE 91.235 BY 101.955 ;
+  PIN VGND
+    DIRECTION INOUT ;
+    USE GROUND ;
+    PORT
+      LAYER met4 ;
+        RECT 24.730 10.640 26.330 90.000 ;
+    END
+    PORT
+      LAYER met4 ;
+        RECT 44.740 10.640 46.340 90.000 ;
+    END
+    PORT
+      LAYER met4 ;
+        RECT 64.750 10.640 66.350 90.000 ;
+    END
+    PORT
+      LAYER met4 ;
+        RECT 84.760 10.640 86.360 90.000 ;
+    END
+  END VGND
+  PIN VPWR
+    DIRECTION INOUT ;
+    USE POWER ;
+    PORT
+      LAYER met4 ;
+        RECT 14.725 10.640 16.325 90.000 ;
+    END
+    PORT
+      LAYER met4 ;
+        RECT 34.735 10.640 36.335 90.000 ;
+    END
+    PORT
+      LAYER met4 ;
+        RECT 54.745 10.640 56.345 90.000 ;
+    END
+    PORT
+      LAYER met4 ;
+        RECT 74.755 10.640 76.355 90.000 ;
+    END
+  END VPWR
+  PIN bluetooth_rx
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.196500 ;
+    PORT
+      LAYER met3 ;
+        RECT 87.235 71.440 91.235 72.040 ;
+    END
+  END bluetooth_rx
+  PIN clk
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.852000 ;
+    PORT
+      LAYER met2 ;
+        RECT 51.610 0.000 51.890 4.000 ;
+    END
+  END clk
+  PIN motor_left_a
+    DIRECTION OUTPUT TRISTATE ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.795200 ;
+    PORT
+      LAYER met3 ;
+        RECT 0.000 54.440 4.000 55.040 ;
+    END
+  END motor_left_a
+  PIN motor_left_b
+    DIRECTION OUTPUT TRISTATE ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.795200 ;
+    PORT
+      LAYER met2 ;
+        RECT 0.090 0.000 0.370 4.000 ;
+    END
+  END motor_left_b
+  PIN motor_right_a
+    DIRECTION OUTPUT TRISTATE ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.795200 ;
+    PORT
+      LAYER met2 ;
+        RECT 9.750 97.955 10.030 101.955 ;
+    END
+  END motor_right_a
+  PIN motor_right_b
+    DIRECTION OUTPUT TRISTATE ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.795200 ;
+    PORT
+      LAYER met2 ;
+        RECT 64.490 97.955 64.770 101.955 ;
+    END
+  END motor_right_b
+  PIN reset
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.196500 ;
+    PORT
+      LAYER met3 ;
+        RECT 87.235 13.640 91.235 14.240 ;
+    END
+  END reset
+  OBS
+      LAYER li1 ;
+        RECT 5.520 10.795 85.560 89.845 ;
+      LAYER met1 ;
+        RECT 0.070 10.640 86.360 90.000 ;
+      LAYER met2 ;
+        RECT 0.100 97.675 9.470 97.955 ;
+        RECT 10.310 97.675 64.210 97.955 ;
+        RECT 65.050 97.675 86.330 97.955 ;
+        RECT 0.100 4.280 86.330 97.675 ;
+        RECT 0.650 4.000 51.330 4.280 ;
+        RECT 52.170 4.000 86.330 4.280 ;
+      LAYER met3 ;
+        RECT 4.000 72.440 87.235 89.925 ;
+        RECT 4.000 71.040 86.835 72.440 ;
+        RECT 4.000 55.440 87.235 71.040 ;
+        RECT 4.400 54.040 87.235 55.440 ;
+        RECT 4.000 14.640 87.235 54.040 ;
+        RECT 4.000 13.240 86.835 14.640 ;
+        RECT 4.000 10.715 87.235 13.240 ;
+      LAYER met4 ;
+        RECT 43.535 34.175 43.865 63.745 ;
+  END
+END uart_bt_car_top
+END LIBRARY
+
