@@ -1,0 +1,7 @@
+Project: Bluetooth-Controlled Car Using UART RTL
+Top Module: uart_bt_car_top
+RTL Modules: uart_bt_car_top.v, bt_car_controller.v, uart_rx.v
+Commands: F=Forward, B=Backward, L=Left, R=Right, S=Stop
+Interface: UART serial input from Bluetooth module
+Motor outputs: External motor driver control signals
+Physical hardware testing: Not verified
