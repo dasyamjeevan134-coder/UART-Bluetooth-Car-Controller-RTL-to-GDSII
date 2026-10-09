@@ -1,7 +1,48 @@
-Project: Bluetooth-Controlled Car Using UART RTL
-Top Module: uart_bt_car_top
-RTL Modules: uart_bt_car_top.v, bt_car_controller.v, uart_rx.v
-Commands: F=Forward, B=Backward, L=Left, R=Right, S=Stop
-Interface: UART serial input from Bluetooth module
-Motor outputs: External motor driver control signals
-Physical hardware testing: Not verified
+============================================================
+       BLUETOOTH-CONTROLLED CAR USING UART RTL
+                  PROJECT SUMMARY
+============================================================
+
+PROJECT INFORMATION
+-------------------
+Project Name      : Bluetooth-Controlled Car Using UART RTL
+Top Module        : uart_bt_car_top
+Design Flow       : RTL-to-GDSII
+Physical Design   : OpenLane
+Technology        : Sky130
+
+DESIGN ARCHITECTURE
+-------------------
+RTL Modules       : uart_bt_car_top.v
+                    bt_car_controller.v
+                    uart_rx.v
+
+Communication    : UART serial input from Bluetooth module
+Command Mapping  : F - Forward
+                    B - Backward
+                    L - Left
+                    R - Right
+                    S - Stop
+
+Motor Interface  : Control outputs for an external motor driver
+Hardware Testing : Not verified
+
+VERIFICATION
+------------
+RTL Simulation    : Refer to the simulation results and waveform
+VCD Waveform      : simulation/uart_bt_car.vcd
+
+PHYSICAL DESIGN
+---------------
+Synthesis         : Refer to the actual OpenLane reports
+Floorplanning     : Refer to the actual OpenLane reports
+Placement         : Refer to the actual OpenLane reports
+Routing           : Refer to the actual OpenLane reports
+Signoff           : Refer to the actual DRC/LVS reports
+
+TIMING, AREA AND POWER
+----------------------
+Values are intentionally not listed here until verified from
+this Bluetooth car project's own OpenLane reports.
+
+============================================================
