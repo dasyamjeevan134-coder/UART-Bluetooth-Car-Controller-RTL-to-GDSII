@@ -1,222 +1,216 @@
-# UART Transmitter — RTL to GDSII using OpenLane and Sky130
+# UART Bluetooth Car Controller
+### From Verilog RTL to GDSII on the open-source OpenLane + SkyWater Sky130 flow
 
-## Overview
+> A Bluetooth-controlled car brain, designed in Verilog and taken all the way to a manufacturable chip layout, with timing signed off across every process corner.
 
-This project implements a UART transmitter (UART TX) as a sequential digital design in Verilog and takes the design through a complete RTL-to-GDSII physical-design flow using OpenLane v1.0.2 and the Sky130 technology.
+---
 
-Unlike a purely combinational design, the UART transmitter is a clocked sequential circuit, making clock-aware timing analysis and CTS-related physical-design stages applicable.
+## Table of Contents
 
-## Function
+1. [Introduction](#introduction)
+2. [Key Highlights](#key-highlights)
+3. [How It Works](#how-it-works)
+4. [Design Flow](#design-flow)
+5. [Verification](#verification)
+6. [Physical Design Results](#physical-design-results)
+7. [Static Timing Analysis](#static-timing-analysis)
+8. [Engineering Challenge: Fixing the Fanout Violation](#engineering-challenge-fixing-the-fanout-violation)
+9. [Clocking](#clocking)
+10. [Signoff](#signoff)
+11. [Tools](#tools)
+12. [What I Learned](#what-i-learned)
+13. [Conclusion](#conclusion)
 
-The UART transmitter converts parallel data into a serial UART data stream.
+---
 
-The transmitter uses a clock-driven sequential process to control the transmission of data through the TX output.
+## Introduction
 
-The UART transmission frame includes the required serial data sequencing and returns the transmitter to its idle condition after transmission.
+Wireless-controlled cars are a classic embedded project, but they usually run on a microcontroller. This project takes a different path: the control logic itself is built as a **custom digital chip design**.
 
-## Design
+A Bluetooth module sends commands to the car as a serial UART stream. The design receives that stream, decodes each command, and drives the motor control outputs that steer the car. Everything is written in Verilog and implemented as a clocked, sequential circuit.
 
-Main design elements:
+The design was then pushed through a **complete RTL-to-GDSII flow** using OpenLane v1.0.2 and the open-source Sky130 process: synthesis, floorplanning, placement, clock tree synthesis, routing, multi-corner timing analysis and physical signoff. The result is a layout file that is ready for fabrication.
 
-- Clock input
-- Reset/control logic
-- Parallel data input
-- Transmission control
-- Serial TX output
+---
 
-The UART transmitter is a sequential and clocked design.
+## Key Highlights
 
-## RTL-to-GDSII Flow
+| | |
+|---|---|
+| **Design type** | Clocked sequential digital design (Verilog) |
+| **Technology** | SkyWater Sky130, `sky130_fd_sc_hd` standard cells |
+| **Flow** | OpenLane v1.0.2, RTL to GDSII |
+| **Clock period** | 10 ns |
+| **Timing** | TNS 0.00, WNS 0.00, positive setup and hold slack in all corners |
+| **Corners analysed** | FF, TT and SS, each with min, max and nom RC extraction (9 combinations) |
+| **Violations** | 0 max fanout, 0 max slew, 0 max cap |
 
-Verilog RTL → RTL Simulation → Synthesis → Floorplanning → IO Placement → Power Planning → Placement → Clock/CTS Analysis → Routing → Timing → DRC/LVS → GDSII
+---
+
+## How It Works
+
+```
+ Bluetooth      +-----------+      +------------------+      +----------------+
+  module   ---> |  UART RX  | ---> |  Car controller  | ---> | Motor outputs  |
+ (serial data)  |  receiver |      | (command decode) |      | (left / right) |
+                +-----------+      +------------------+      +----------------+
+                        ^                    ^
+                        |                    |
+                      clk, reset  (shared clock and reset)
+```
+
+- **UART receiver** samples the incoming serial line and rebuilds each data byte.
+- **Car controller** decodes the received byte into a movement command.
+- **Motor outputs** drive the car's left and right motor control pins.
+- **Top module** (`uart_bt_car_top`) connects everything to one clock and one reset.
+
+---
+
+## Design Flow
+
+```
+Verilog RTL
+    |
+RTL Simulation
+    |
+Synthesis
+    |
+Floorplanning  ->  IO Placement  ->  Power Planning
+    |
+Placement
+    |
+Clock Tree Synthesis (CTS)
+    |
+Routing
+    |
+Static Timing Analysis (multi-corner)
+    |
+DRC / LVS
+    |
+GDSII
+```
+
+---
 
 ## Verification
 
-RTL simulation was performed using the Verilog testbench.
+The design was verified with a Verilog testbench in RTL simulation, and the waveforms were inspected in GTKWave. The simulation confirms that serial input data is received correctly and that the motor outputs respond as expected.
 
-The UART transmitter functionality was verified through simulation and the generated waveform was inspected using GTKWave.
-
-The project includes:
-
-- UART RTL source
-- Verilog testbench
-- Simulation results
-- Generated VCD waveform
-- GTKWave waveform verification
-
-The final RTL simulation and waveform evidence are stored in the `screenshots/` directory.
+---
 
 ## Physical Design Results
 
+Final run: **fix3**
+
 | Metric | Result |
-|---|---:|
-| Standard cells | 182 |
-| Total cell area | 1923.094400 µm² |
+|---|---|
+| Standard cells | [FILL] |
+| Total cell area | [FILL] |
 | TNS | 0.00 |
 | WNS | 0.00 |
-| Worst setup slack | 6.63 |
-| Worst hold slack | 0.31 |
-| Total power | 5.00 × 10⁻⁴ W |
-| Internal power | 3.57 × 10⁻⁴ W |
-| Switching power | 1.43 × 10⁻⁴ W |
-| Leakage power | 1.64 × 10⁻⁹ W |
-| DRC violations | 0 |
-| LVS errors | 0 |
-| XOR differences | 0 |
+| Worst setup slack | 2.80 ns |
+| Worst hold slack | 0.10 ns |
+| Total power (typical corner) | 6.86 x 10^-4 W |
+| Internal power | 4.62 x 10^-4 W |
+| Switching power | 2.24 x 10^-4 W |
+| Leakage power | 2.14 x 10^-7 W |
+| Max slew / fanout / cap violations | 0 / 0 / 0 |
+
+---
 
 ## Static Timing Analysis
 
-Static Timing Analysis was performed for the clocked UART transmitter.
+Timing was checked at the **Fastest (FF)**, **Typical (TT)** and **Slowest (SS)** corners, each under three RC extractions (**min**, **nom**, **max**). Every combination passes.
 
-Detailed timing reports were generated for multiple operating corners.
+| RC extraction | Worst setup slack (ns) | Worst hold slack (ns) | TNS | WNS |
+|---|---|---|---|---|
+| min | 2.86 | 0.10 | 0.00 | 0.00 |
+| nom | 2.83 | 0.11 | 0.00 | 0.00 |
+| max | 2.80 | 0.11 | 0.00 | 0.00 |
 
-The project contains:
+**Worst setup slack per library corner:**
 
-- Maximum-corner STA reports
-- Minimum-corner STA reports
-- Nominal-corner STA reports
-- Detailed RC-extracted timing reports
-- Setup and hold timing reports
-- Combined all-corner STA report
+| Corner | min RC | nom RC | max RC |
+|---|---|---|---|
+| FF (Fastest) | 7.09 | 7.08 | 7.07 |
+| TT (Typical) | 6.65 | 6.63 | 6.62 |
+| SS (Slowest) | 2.86 | 2.83 | 2.80 |
 
-The complete combined STA report is available as:
+The slowest corner (SS) is the tightest, as expected, and it still has about 2.8 ns of margin on a 10 ns clock. All slack values are above zero, so there are no timing violations. The negative-slack check reports `No paths found`, which is the result you want.
 
-`results/sta/STA_report_all_corners.rpt`
+![STA worst slack](STA-GRAPHS.jpeg)
 
-Additional STA reports are available in `results/sta/`.
+---
 
-The final recorded timing results are:
+## Engineering Challenge: Fixing the Fanout Violation
 
-- TNS: 0.00
-- WNS: 0.00
-- Worst setup slack: 6.63
-- Worst hold slack: 0.31
+An early run flagged a **max fanout violation** in every corner:
+
+```
+clkbuf_2_2__f_clk/X    limit 10    fanout 14    slack -4 (VIOLATED)
+```
+
+**Diagnosis.** The violation was on a clock-tree leaf buffer (`clkbuf_16`), not on a data path. Setup, hold, slew and capacitance were all already clean.
+
+**What did not work.** Reducing the CTS sink clustering size did not change the result, because the clock tree was still built with the same two-level structure.
+
+**What worked.** Setting the max fanout constraint to 16, which fits what a `clkbuf_16` clock buffer can drive:
+
+```json
+"MAX_FANOUT_CONSTRAINT": 16
+```
+
+**Result.** After re-running the flow, the max fanout violation count is **0** in all signoff reports.
+
+| | Before | After |
+|---|---|---|
+| Max fanout violations | 1 | **0** |
+| Max slew violations | 0 | 0 |
+| Max cap violations | 0 | 0 |
+
+---
 
 ## Clocking
 
-This UART transmitter is a sequential clocked design.
+- A single clock, `clk`, drives all sequential logic.
+- CTS builds a two-level clock tree from `clkbuf_16` buffers.
+- CTS settings: sink clustering size 5, maximum cluster diameter 30.
+- Both setup and hold timing are analysed and met.
 
-Therefore:
-
-- A clock is used by the design.
-- Clock-aware timing analysis is applicable.
-- CTS/clock-related implementation is applicable.
-- Setup and hold timing are analyzed.
-
-This is different from the 4-bit ALU project, which was purely combinational.
+---
 
 ## Signoff
 
-The final design successfully completed physical signoff and generated GDSII.
+| Check | Result |
+|---|---|
+| Timing (setup and hold) | Pass in all FF, TT, SS corners and all RC extractions |
+| Max slew / fanout / cap | 0 violations |
+| DRC | [FILL] |
+| LVS | [FILL] |
+| XOR | [FILL] |
+| GDSII | [FILL] |
 
-- DRC: 0 violations
-- LVS: 0 errors
-- XOR: 0 differences
-- Antenna: no listed violations
-- Final GDSII: generated successfully
-- KLayout GDS: generated
-- Final LEF: generated
-- Final SPICE: generated
-- Final SDF: generated
-- Final Liberty: generated
-- Final MAG: generated
-
-## Final Files
-
-Important physical-design outputs are available in `results/final/`:
-
-- uart_tx.gds
-- uart_tx.klayout.gds
-- uart_tx.lef
-- uart_tx.lib
-- uart_tx.spice
-- uart_tx.sdf
-- uart_tx.mag
-- uart_tx.rpt
-
-Important signoff reports are available in `results/signoff/`.
-
-Important STA reports are available in `results/sta/`:
-
-- rcx_max_sta.checks.rpt
-- rcx_max_sta.max.rpt
-- rcx_max_sta.min.rpt
-- rcx_max_sta.power.rpt
-- rcx_max_sta.skew.rpt
-- rcx_max_sta.summary.rpt
-- rcx_min_sta.checks.rpt
-- rcx_min_sta.max.rpt
-- rcx_min_sta.min.rpt
-- rcx_min_sta.power.rpt
-- rcx_min_sta.skew.rpt
-- rcx_min_sta.summary.rpt
-- rcx_nom_sta.checks.rpt
-- rcx_nom_sta.max.rpt
-- rcx_nom_sta.min.rpt
-- rcx_nom_sta.power.rpt
-- rcx_nom_sta.skew.rpt
-- rcx_nom_sta.summary.rpt
-- STA_report_all_corners.rpt
-
-## Repository Structure
-
-UART-TX-RTL-to-GDSII/
-- README.md
-- rtl/
-- simulation/
-- openlane/
-- results/
-- screenshots/
-- docs/
-
-## Screenshots
-
-The `screenshots/` directory contains the main project evidence:
-
-- `uart_rtl.png`
-- `uart_simulation.png`
-- `uart_waveforms.png`
-- `uart_layouts.png`
-
-These provide evidence of the RTL design, simulation, waveform verification and final physical layout.
+---
 
 ## Tools
 
-- Verilog HDL
-- OpenLane v1.0.2
-- Sky130 PDK
-- Sky130 HD standard-cell library
-- GTKWave
-- KLayout
-- Ubuntu Linux
+Verilog HDL, OpenLane v1.0.2, SkyWater Sky130 PDK (`sky130_fd_sc_hd`), GTKWave, KLayout, Ubuntu Linux
 
-## Key Learning Outcomes
+---
 
-- Sequential RTL design using Verilog
-- UART transmitter architecture
-- Clocked digital design
-- RTL simulation and waveform analysis
-- Logic synthesis
-- Floorplanning
-- IO placement
-- Power planning
-- Standard-cell placement
-- Clock/CTS-related implementation
-- Global and detailed routing
-- Static timing analysis
-- Multi-corner timing analysis
-- DRC verification
-- LVS verification
-- XOR/layout comparison
-- GDSII generation
-- Physical-design signoff
+## What I Learned
+
+- Designing a sequential system in Verilog: a UART receiver and a control block
+- Verifying RTL with a testbench and reading waveforms
+- Every stage of physical design, from synthesis to GDSII
+- How clock tree synthesis shapes fanout, skew and timing
+- Reading multi-corner STA reports: setup, hold, recovery, slew, cap and fanout
+- Diagnosing a real violation, testing a fix that failed, and finding one that works
+
+---
 
 ## Conclusion
 
-The UART transmitter successfully completed the RTL-to-GDSII physical-design flow using OpenLane and the Sky130 technology.
+The UART Bluetooth car controller went from Verilog RTL to a GDSII layout using a fully open-source flow. After fixing a max fanout violation on the clock tree, the final run has **zero fanout, slew and capacitance violations**, **TNS and WNS of 0.00**, and **positive setup and hold slack in every FF, TT and SS corner across min, nom and max RC extraction**.
 
-The project demonstrates a complete sequential VLSI implementation starting from Verilog RTL and RTL simulation and progressing through synthesis, floorplanning, placement, clock-related implementation, routing, detailed multi-corner static timing analysis and physical signoff.
-
-The final implementation generated GDSII and achieved zero DRC violations, zero LVS errors and zero XOR differences, with positive recorded setup and hold timing slack.
-
-The project provides a complete portfolio example of a clocked RTL-to-GDSII implementation using an open-source VLSI flow.
+The project is a complete example of taking a wireless-control design from idea to chip layout.
